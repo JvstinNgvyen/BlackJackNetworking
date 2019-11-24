@@ -60,7 +60,7 @@ class Player:
             elif card.getValue() == "ACE":
                 if value + 11 > 21:
                     return value + 1
-                else:
+                elif value + 11 < 21:
                     return value + 11
             else:
                 value += int(card.getValue())
