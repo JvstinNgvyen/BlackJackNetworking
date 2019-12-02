@@ -131,18 +131,26 @@ while True:
             message = "Player decided to hit\n" + d
             connectionSocket.send(message.encode())
     elif sentence == 'stand':
-        message = ("{} decided to stand.".format(addr[0]))
+       # message = ("{} decided to stand.".format(addr[0]))
         if player.calcScore() <= 21:
             while dealer.calcScore() < 17:
                 dealer.draw(deck)
                 if dealer.calcScore() > 21:
-                    message = "Dealer Bust"
+                    d = str(showAll(player, dealer))
+                    message = d + "\nDealer Busted"
                     connectionSocket.send(message.encode())
-                    connectionSocket.close()
                     break
             d = str(showAll(player, dealer))
+            compareValues = cmp(player.calcScore(), dealer.calcScore())
+            if dealer.calcScore() > 21:
+                message = d + "\nDealer Busted"
+            elif compareValues == 0:
+                message = d + "\nTie"
+            elif compareValues == -1:
+                message = d + "\nDealer Wins"
+            elif compareValues == 1:
+                message = d + "\nPlayer Wins"
         connectionSocket.send(message.encode())
         connectionSocket.close()
-        break
     else:
         connectionSocket.close()
