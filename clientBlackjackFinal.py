@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
 import socket
 
-serverName = socket.gethostname()
+serverName = '192.168.0.4' #socket.gethostname()
 serverPort = 5000
-complete_info = ''
-sentence = input('Type "play" to start game ')
-while sentence != 'exit':
+sentence = input('Type "play" To Start Game ')
 
+while True:
     clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     clientSocket.connect((serverName, serverPort))
     clientSocket.send(sentence.encode())
     game = clientSocket.recv(1024)
     print(game.decode())
-    clientSocket.close()
+
+    if "Game Over" in game.decode():
+        clientSocket.close()
+        break
     sentence = input()
+
+clientSocket.close()
