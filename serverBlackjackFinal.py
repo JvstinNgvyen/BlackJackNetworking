@@ -1,7 +1,6 @@
 import socket
 import random
 
-
 class Card:
     def __init__(self, suit, value):
         self.suit = suit
@@ -15,7 +14,6 @@ class Card:
 
     def setValue(self, x):
         self.value = x
-
 
 class Deck:
     def __init__(self):
@@ -39,11 +37,16 @@ class Deck:
     def drawCard(self):
         return self.cards.pop()
 
-
 class Player:
     def __init__(self, name):
         self.name = name
         self.hand = []
+
+    def setName(self, name):
+        self.name = name
+
+    def getName(self):
+        return self.name
 
     def draw(self, deck):
         self.hand.append((deck.drawCard()))
@@ -73,10 +76,8 @@ class Player:
                 value += int(card.getValue())
         return value
 
-
 def cmp(a, b):
     return (a > b) - (a < b)
-
 
 def showSome(player, dealer):
     return "_____________________\nDealer Hand: {} \n_____________________\nPlayer Hand: {}\n" \
@@ -89,7 +90,7 @@ def showAll(player, dealer):
            "Total: {}\n_____________________ \n".format(
             dealer.showHandPlayer(), dealer.calcScore(), player.showHandPlayer(), player.calcScore())
 
-
+host = '192.168.0.4' #socket.gethostname()
 serverPort = 5000
 
 deck = Deck()
@@ -104,53 +105,60 @@ player.draw(deck)
 player.draw(deck)
 
 serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-serverSocket.bind(('', serverPort))
-serverSocket.listen(1)
+serverSocket.bind((host, serverPort))
+serverSocket.listen(2)
+
 print('BlackJack started.')
+
 while True:
-
     connectionSocket, addr = serverSocket.accept()
+    show = str(showSome(player, dealer))
+    print("Initial Hand\n" + show)
 
-    d = str(showSome(player, dealer))
-    print(d)
-
-    print('Connected with ' + addr[0] + ':' + str(addr[1]))
+    print('Player = ' + addr[0] + ':' + str(addr[1]))
     sentence = connectionSocket.recv(1024).decode()
 
     if sentence == 'play':
-        connectionSocket.send(d.encode())
+        connectionSocket.send(show.encode())
+
     if sentence == 'hit':
         player.draw(deck)
+
         if player.calcScore() > 21:
-            d = str(showAll(player, dealer))
-            message =  d + "\nPlayer Busted"
+            show = str(showAll(player, dealer))
+            print(show)
+            message =  show + "\nPlayer Busted, Game Over!"
             connectionSocket.send(message.encode())
             connectionSocket.close()
         else:
-            d = str(showSome(player, dealer))
-            message = "Player decided to hit\n" + d
+            show = str(showSome(player, dealer))
+            print(show)
+            message = "Player decided to hit\n" + show
             connectionSocket.send(message.encode())
     elif sentence == 'stand':
-       # message = ("{} decided to stand.".format(addr[0]))
         if player.calcScore() <= 21:
             while dealer.calcScore() < 17:
                 dealer.draw(deck)
                 if dealer.calcScore() > 21:
-                    d = str(showAll(player, dealer))
-                    message = d + "\nDealer Busted"
+                    show = str(showAll(player, dealer))
+                    print(show)
+                    message = show + "\nDealer Busted, Game Over!"
                     connectionSocket.send(message.encode())
                     break
-            d = str(showAll(player, dealer))
+            show = str(showAll(player, dealer))
+            print(show)
+
             compareValues = cmp(player.calcScore(), dealer.calcScore())
             if dealer.calcScore() > 21:
-                message = d + "\nDealer Busted"
+                message = show + "\nDealer Busted, Game Over!"
             elif compareValues == 0:
-                message = d + "\nTie"
+                message = show + "\nTie, Game Over!"
             elif compareValues == -1:
-                message = d + "\nDealer Wins"
+                message = show + "\nDealer Wins, Game Over!"
             elif compareValues == 1:
-                message = d + "\nPlayer Wins"
+                message = show + "\nPlayer Wins, Game Over!"
+
         connectionSocket.send(message.encode())
         connectionSocket.close()
-    else:
-        connectionSocket.close()
+
+connectionSocket.close()
